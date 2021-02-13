@@ -123,7 +123,6 @@ namespace OverlayAddon
     void SetLowPriority(const FunctionCallbackInfo<Value> &args)
     {
         Isolate *isolate = args.GetIsolate();
-        Local<Context> context = isolate->GetCurrentContext();
 
         String::Utf8Value pid(isolate, args[0]);
         std::string cppStr(*pid);
