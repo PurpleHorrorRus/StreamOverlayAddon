@@ -1,0 +1,4 @@
+﻿node_modules
+build/Release/obj
+build/config.gypi
+.vs
