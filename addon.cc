@@ -6,8 +6,6 @@
 #include <node.h>
 #include <windows.h>
 #include <tlhelp32.h>
-#include <atlbase.h>
-#include <iostream>
 
 namespace OverlayAddon
 {
@@ -98,12 +96,11 @@ namespace OverlayAddon
         while (Process32Next(snap, &entry))
         {
             Local<Object> obj = Object::New(isolate);
-            CW2A exe(convertCharArrayToLPCWSTR(entry.szExeFile), CP_UTF8);
 
             obj->Set(
                    context,
                    String::NewFromUtf8(isolate, "name", NewStringType::kNormal).ToLocalChecked(),
-                   String::NewFromUtf8(isolate, exe.m_psz, NewStringType::kNormal).ToLocalChecked())
+                   String::NewFromUtf8(isolate, entry.szExeFile, NewStringType::kNormal).ToLocalChecked())
                 .FromJust();
 
             obj->Set(
