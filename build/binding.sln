@@ -21,18 +21,18 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "(src)", "..\Projects\Overla
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|x64 = Debug|x64
 		Release|x64 = Release|x64
+		Debug|x64 = Debug|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{8BE06478-C3C6-F195-E6C5-A3AA582EC53A}.Debug|x64.ActiveCfg = Debug|x64
-		{8BE06478-C3C6-F195-E6C5-A3AA582EC53A}.Debug|x64.Build.0 = Debug|x64
 		{8BE06478-C3C6-F195-E6C5-A3AA582EC53A}.Release|x64.ActiveCfg = Release|x64
 		{8BE06478-C3C6-F195-E6C5-A3AA582EC53A}.Release|x64.Build.0 = Release|x64
-		{C87E2208-1247-113C-38CC-EEDC87048884}.Debug|x64.ActiveCfg = Debug|x64
-		{C87E2208-1247-113C-38CC-EEDC87048884}.Debug|x64.Build.0 = Debug|x64
+		{8BE06478-C3C6-F195-E6C5-A3AA582EC53A}.Debug|x64.ActiveCfg = Debug|x64
+		{8BE06478-C3C6-F195-E6C5-A3AA582EC53A}.Debug|x64.Build.0 = Debug|x64
 		{C87E2208-1247-113C-38CC-EEDC87048884}.Release|x64.ActiveCfg = Release|x64
 		{C87E2208-1247-113C-38CC-EEDC87048884}.Release|x64.Build.0 = Release|x64
+		{C87E2208-1247-113C-38CC-EEDC87048884}.Debug|x64.ActiveCfg = Debug|x64
+		{C87E2208-1247-113C-38CC-EEDC87048884}.Debug|x64.Build.0 = Debug|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
