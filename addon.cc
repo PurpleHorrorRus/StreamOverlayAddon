@@ -13,16 +13,6 @@ namespace OverlayAddon
     using v8::String;
     using v8::Value;
 
-    void SetLowPriority(const DWORD pid)
-    {
-        if (const HANDLE handle = OpenProcess(PROCESS_ALL_ACCESS, true, pid))
-        {
-            SetProcessAffinityMask(handle, (DWORD_PTR) 0x1 << (std::thread::hardware_concurrency() - 1));
-            while (!SetPriorityClass(handle, 0x40));
-            CloseHandle(handle);
-        }
-    }
-
     void Run(const FunctionCallbackInfo<Value> &args)
     {
         Isolate *isolate = args.GetIsolate();
@@ -34,8 +24,14 @@ namespace OverlayAddon
         PROCESSENTRY32 entry;
 
         while (Process32Next(snap, &entry))
-            if (stricmp(entry.szExeFile, *name) == 0 && entry.pcPriClassBase != 4)
-                SetLowPriority(entry.th32ProcessID);
+            if (stricmp(entry.szExeFile, *name) == 0 && entry.pcPriClassBase != 4) {
+                if (const HANDLE handle = OpenProcess(PROCESS_ALL_ACCESS, true, entry.th32ProcessID))
+                {
+                    SetProcessAffinityMask(handle, (DWORD_PTR) 0x1 << (std::thread::hardware_concurrency() - 1));
+                    while (!SetPriorityClass(handle, 0x40));
+                    CloseHandle(handle);
+                }
+            }
                 
         CloseHandle(snap);
     }
