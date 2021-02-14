@@ -17,9 +17,7 @@ namespace OverlayAddon
     {
         Isolate *isolate = args.GetIsolate();
         const String::Utf8Value name(isolate, args[0]);
-
         const Local<Context> context = isolate->GetCurrentContext();
-
         const HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
         PROCESSENTRY32 entry;
 
