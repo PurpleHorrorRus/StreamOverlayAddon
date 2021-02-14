@@ -19,13 +19,14 @@ namespace OverlayAddon
         const String::Utf8Value name(isolate, args[0]);
         const Local<Context> context = isolate->GetCurrentContext();
         const HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+        const DWORD mask = 0x1 << (std::thread::hardware_concurrency() - 1);
         PROCESSENTRY32 entry;
-
+        
         while (Process32Next(snap, &entry))
             if (stricmp(entry.szExeFile, *name) == 0 && entry.pcPriClassBase != 4) {
                 if (const HANDLE handle = OpenProcess(PROCESS_ALL_ACCESS, true, entry.th32ProcessID))
                 {
-                    SetProcessAffinityMask(handle, (DWORD_PTR) 0x1 << (std::thread::hardware_concurrency() - 1));
+                    SetProcessAffinityMask(handle, mask);
                     while (!SetPriorityClass(handle, 0x40));
                     CloseHandle(handle);
                 }
