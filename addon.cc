@@ -12,7 +12,7 @@ namespace OverlayAddon
     using v8::String;
     using v8::Value;
 
-    void Run(const FunctionCallbackInfo<Value> &args)
+    void SetLowPriority(const FunctionCallbackInfo<Value> &args)
     {
         const String::Utf8Value name(args.GetIsolate(), args[0]);
         const HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
@@ -33,13 +33,16 @@ namespace OverlayAddon
 
     void MoveTop(const FunctionCallbackInfo<Value> &args) {
         unsigned char* bufferData = (unsigned char*)node::Buffer::Data(args[0].As<Object>());
-        unsigned long handle = *reinterpret_cast<unsigned long*>(bufferData);
-        SetWindowPos((HWND)handle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+        SetWindowPos(
+            (HWND) *reinterpret_cast<unsigned long*>(bufferData), 
+            HWND_TOPMOST, 0, 0, 0, 0,
+            SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW | SWP_NOZORDER
+        );
     }
 
     void Initialize(const Local<Object> exports)
     {
-        NODE_SET_METHOD(exports, "Run", Run);
+        NODE_SET_METHOD(exports, "SetLowPriority", SetLowPriority);
         NODE_SET_METHOD(exports, "MoveTop", MoveTop);
     }
 
