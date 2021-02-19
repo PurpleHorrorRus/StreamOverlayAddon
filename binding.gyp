@@ -5,7 +5,7 @@
             'sources': ['addon.cc'],
             'include_dirs': [
                 '<!@(node -p "require(\'node-addon-api\').include")',
-                '<!@(node -e "require(\'nan\')")'
+                "<!(node -e \"require('nan')\")"
             ],
             'dependencies': ['<!(node -p "require(\'node-addon-api\').gyp")'],
             'cflags!': ['-fno-exceptions'],
