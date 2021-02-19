@@ -32,8 +32,7 @@ namespace OverlayAddon
     }
 
     void MoveTop(const FunctionCallbackInfo<Value>& args) {
-        Local<Object> bufferObj = args[0].As<Object>();
-        unsigned char* bufferData = (unsigned char*)node::Buffer::Data(bufferObj);
+        unsigned char* bufferData = (unsigned char*)node::Buffer::Data(args[0].As<Object>());
         unsigned long handle = *reinterpret_cast<unsigned long*>(bufferData);
         SetWindowPos((HWND)handle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
     }
