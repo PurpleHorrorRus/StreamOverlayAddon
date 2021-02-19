@@ -36,7 +36,7 @@ namespace OverlayAddon
         SetWindowPos(
             (HWND) *reinterpret_cast<unsigned long*>(bufferData), 
             HWND_TOPMOST, 0, 0, 0, 0,
-            SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW | SWP_NOZORDER
+            SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW
         );
     }
 
