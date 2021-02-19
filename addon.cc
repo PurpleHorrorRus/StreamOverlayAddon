@@ -1,4 +1,5 @@
 #include <node.h>
+#include <nan.h>
 #include <windows.h>
 #include <tlhelp32.h>
 #include <thread>
@@ -6,7 +7,6 @@
 namespace OverlayAddon
 {
     using v8::FunctionCallbackInfo;
-    using v8::Isolate;
     using v8::Local;
     using v8::Object;
     using v8::String;
@@ -31,9 +31,17 @@ namespace OverlayAddon
         CloseHandle(snap);
     }
 
+    void MoveTop(const FunctionCallbackInfo<Value>& args) {
+        Local<Object> bufferObj = args[0].As<Object>();
+        unsigned char* bufferData = (unsigned char*)node::Buffer::Data(bufferObj);
+        unsigned long handle = *reinterpret_cast<unsigned long*>(bufferData);
+        SetWindowPos((HWND)handle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+    }
+
     void Initialize(const Local<Object> exports)
     {
         NODE_SET_METHOD(exports, "Run", Run);
+        NODE_SET_METHOD(exports, "MoveTop", MoveTop);
     }
 
     NODE_MODULE(NODE_GYP_MODULE_NAME, Initialize)
