@@ -20,11 +20,11 @@ namespace OverlayAddon
         PROCESSENTRY32 entry;
         
         while (Process32Next(snap, &entry))
-            if (strcmp(entry.szExeFile, *name) == 0 && entry.pcPriClassBase != 4)
+            if (strcmp(entry.szExeFile, *name) == 0 && entry.pcPriClassBase != IDLE_PRIORITY_CLASS)
                 if (const HANDLE handle = OpenProcess(PROCESS_ALL_ACCESS, true, entry.th32ProcessID))
                 {
                     SetProcessAffinityMask(handle, mask);
-                    while (!SetPriorityClass(handle, 0x40));
+                    while (!SetPriorityClass(handle, IDLE_PRIORITY_CLASS));
                     CloseHandle(handle);
                 }
                 
