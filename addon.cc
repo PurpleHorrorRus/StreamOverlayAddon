@@ -2,7 +2,6 @@
 #include <tlhelp32.h>
 #include <thread>
 #include <psapi.h>
-#include <iostream>
 #pragma comment(lib, "psapi.lib")
 
 namespace OverlayAddon
