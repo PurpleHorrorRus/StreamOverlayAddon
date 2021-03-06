@@ -1,48 +1,80 @@
-#include <node.h>
 #include <nan.h>
-#include <windows.h>
 #include <tlhelp32.h>
 #include <thread>
+#include <psapi.h>
+#include <iostream>
+#pragma comment(lib, "psapi.lib")
 
 namespace OverlayAddon
 {
+    using v8::Isolate;
+    using v8::Context;
     using v8::FunctionCallbackInfo;
     using v8::Local;
     using v8::Object;
     using v8::String;
     using v8::Value;
 
+    const DWORD mask = 0x1 << (std::thread::hardware_concurrency() - 1);
+
+    std::string windowName;
+    HWND window;
+
+    void InitWindow(const FunctionCallbackInfo<Value>& args) {
+        unsigned char* bufferData = (unsigned char*)node::Buffer::Data(args[0].As<Object>());
+        window = (HWND) *reinterpret_cast<unsigned long*>(bufferData);
+
+        Isolate* isolate = args.GetIsolate();
+        String::Utf8Value name(isolate, args[1]->ToString(isolate->GetCurrentContext()).ToLocalChecked());
+        windowName = (std::string) *name;
+    }
+
     void SetLowPriority(const FunctionCallbackInfo<Value> &args)
     {
-        const String::Utf8Value name(args.GetIsolate(), args[0]);
         const HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-        const DWORD mask = 0x1 << (std::thread::hardware_concurrency() - 1);
         PROCESSENTRY32 entry;
         
-        while (Process32Next(snap, &entry))
-            if (strcmp(entry.szExeFile, *name) == 0 && entry.pcPriClassBase != IDLE_PRIORITY_CLASS)
-                if (const HANDLE handle = OpenProcess(PROCESS_ALL_ACCESS, true, entry.th32ProcessID))
-                {
+        while (Process32Next(snap, &entry)) {
+            if (strcmp(entry.szExeFile, windowName.c_str()) == 0 && entry.pcPriClassBase != IDLE_PRIORITY_CLASS) {
+                if (const HANDLE handle = OpenProcess(PROCESS_ALL_ACCESS, true, entry.th32ProcessID)) {
                     SetProcessAffinityMask(handle, mask);
-                    while (!SetPriorityClass(handle, IDLE_PRIORITY_CLASS));
+                    SetPriorityClass(handle, IDLE_PRIORITY_CLASS);
+                    SetProcessWorkingSetSize(handle, -1, -1);
+                    EmptyWorkingSet(handle);
                     CloseHandle(handle);
                 }
-                
+            }
+        }
+
+        CloseHandle(snap);
+    }
+
+    void ReduceWorkingSet(const FunctionCallbackInfo<Value>& args)
+    {
+        const HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+        PROCESSENTRY32 entry;
+
+        while (Process32Next(snap, &entry)) {
+            if (strcmp(entry.szExeFile, windowName.c_str()) == 0) {
+                if (const HANDLE handle = OpenProcess(PROCESS_ALL_ACCESS, true, entry.th32ProcessID)) {
+                    EmptyWorkingSet(handle);
+                    CloseHandle(handle);
+                }
+            }
+        }
+
         CloseHandle(snap);
     }
 
     void MoveTop(const FunctionCallbackInfo<Value> &args) {
-        unsigned char* bufferData = (unsigned char*)node::Buffer::Data(args[0].As<Object>());
-        SetWindowPos(
-            (HWND) *reinterpret_cast<unsigned long*>(bufferData), 
-            HWND_TOPMOST, 0, 0, 0, 0,
-            SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW
-        );
+        SetWindowPos(window, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
     }
 
     void Initialize(const Local<Object> exports)
     {
+        NODE_SET_METHOD(exports, "InitWindow", InitWindow);
         NODE_SET_METHOD(exports, "SetLowPriority", SetLowPriority);
+        NODE_SET_METHOD(exports, "ReduceWorkingSet", ReduceWorkingSet);
         NODE_SET_METHOD(exports, "MoveTop", MoveTop);
     }
 
