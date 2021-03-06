@@ -18,8 +18,10 @@ namespace OverlayAddon
 
     std::string windowName;
     HWND window;
+    PROCESSENTRY32 entry;
 
-    void InitWindow(const FunctionCallbackInfo<Value>& args) {
+    void InitWindow(const FunctionCallbackInfo<Value> &args) 
+    {
         unsigned char* bufferData = (unsigned char*)node::Buffer::Data(args[0].As<Object>());
         window = (HWND) *reinterpret_cast<unsigned long*>(bufferData);
 
@@ -31,15 +33,13 @@ namespace OverlayAddon
     void SetLowPriority(const FunctionCallbackInfo<Value> &args)
     {
         const HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-        PROCESSENTRY32 entry;
-        
+
         while (Process32Next(snap, &entry)) {
-            if (strcmp(entry.szExeFile, windowName.c_str()) == 0 && entry.pcPriClassBase != IDLE_PRIORITY_CLASS) {
+            if (strcmp(entry.szExeFile, windowName.c_str()) == 0 && entry.pcPriClassBase != 4) {
                 if (const HANDLE handle = OpenProcess(PROCESS_ALL_ACCESS, true, entry.th32ProcessID)) {
                     SetProcessAffinityMask(handle, mask);
                     SetPriorityClass(handle, IDLE_PRIORITY_CLASS);
                     SetProcessWorkingSetSize(handle, -1, -1);
-                    EmptyWorkingSet(handle);
                     CloseHandle(handle);
                 }
             }
@@ -48,10 +48,9 @@ namespace OverlayAddon
         CloseHandle(snap);
     }
 
-    void ReduceWorkingSet(const FunctionCallbackInfo<Value>& args)
+    void ReduceWorkingSet(const FunctionCallbackInfo<Value> &args)
     {
         const HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-        PROCESSENTRY32 entry;
 
         while (Process32Next(snap, &entry)) {
             if (strcmp(entry.szExeFile, windowName.c_str()) == 0) {
@@ -65,12 +64,15 @@ namespace OverlayAddon
         CloseHandle(snap);
     }
 
-    void MoveTop(const FunctionCallbackInfo<Value> &args) {
+    void MoveTop(const FunctionCallbackInfo<Value> &args) 
+    {
         SetWindowPos(window, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
     }
 
     void Initialize(const Local<Object> exports)
     {
+        entry.dwSize = sizeof(PROCESSENTRY32);
+
         NODE_SET_METHOD(exports, "InitWindow", InitWindow);
         NODE_SET_METHOD(exports, "SetLowPriority", SetLowPriority);
         NODE_SET_METHOD(exports, "ReduceWorkingSet", ReduceWorkingSet);
