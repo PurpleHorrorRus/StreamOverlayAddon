@@ -37,10 +37,12 @@ namespace OverlayAddon
         const HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
         while (Process32Next(snap, &entry)) {
             if (strcmp(entry.szExeFile, ((std::string) *name).c_str()) == 0) {
+                CloseHandle(snap);
                 return args.GetReturnValue().Set(true);
             }
         }
 
+        CloseHandle(snap);
         return args.GetReturnValue().Set(false);
     }
 
