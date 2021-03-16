@@ -30,6 +30,20 @@ namespace OverlayAddon
         windowName = (std::string) *name;
     }
 
+    void FindWindow(const FunctionCallbackInfo<Value>& args) {
+        Isolate* isolate = args.GetIsolate();
+        String::Utf8Value name(isolate, args[0]->ToString(isolate->GetCurrentContext()).ToLocalChecked());
+
+        const HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+        while (Process32Next(snap, &entry)) {
+            if (strcmp(entry.szExeFile, ((std::string) *name).c_str()) == 0) {
+                return args.GetReturnValue().Set(true);
+            }
+        }
+
+        return args.GetReturnValue().Set(false);
+    }
+
     void SetLowPriority(const FunctionCallbackInfo<Value> &args)
     {
         const HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
@@ -74,6 +88,7 @@ namespace OverlayAddon
         entry.dwSize = sizeof(PROCESSENTRY32);
 
         NODE_SET_METHOD(exports, "InitWindow", InitWindow);
+        NODE_SET_METHOD(exports, "FindWindow", FindWindow);
         NODE_SET_METHOD(exports, "SetLowPriority", SetLowPriority);
         NODE_SET_METHOD(exports, "ReduceWorkingSet", ReduceWorkingSet);
         NODE_SET_METHOD(exports, "MoveTop", MoveTop);
