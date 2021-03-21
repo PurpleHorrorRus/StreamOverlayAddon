@@ -16,7 +16,7 @@ namespace OverlayAddon
 
     const DWORD mask = 0x1 << (std::thread::hardware_concurrency() - 1);
 
-    std::string windowName;
+    char* windowName;
     HWND window;
     PROCESSENTRY32 entry;
 
@@ -27,7 +27,7 @@ namespace OverlayAddon
 
         Isolate* isolate = args.GetIsolate();
         String::Utf8Value name(isolate, args[1]->ToString(isolate->GetCurrentContext()).ToLocalChecked());
-        windowName = (std::string) *name;
+        std::strcpy(windowName, ((std::string)*name).c_str());
     }
 
     void FindWindow(const FunctionCallbackInfo<Value>& args) {
@@ -51,7 +51,7 @@ namespace OverlayAddon
         const HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 
         while (Process32Next(snap, &entry)) {
-            if (strcmp(entry.szExeFile, windowName.c_str()) == 0 && entry.pcPriClassBase != 4) {
+            if (strcmp(entry.szExeFile, windowName) == 0 && entry.pcPriClassBase != 4) {
                 if (const HANDLE handle = OpenProcess(PROCESS_ALL_ACCESS, true, entry.th32ProcessID)) {
                     SetProcessAffinityMask(handle, mask);
                     SetPriorityClass(handle, IDLE_PRIORITY_CLASS);
@@ -69,7 +69,7 @@ namespace OverlayAddon
         const HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 
         while (Process32Next(snap, &entry)) {
-            if (strcmp(entry.szExeFile, windowName.c_str()) == 0) {
+            if (strcmp(entry.szExeFile, windowName) == 0) {
                 if (const HANDLE handle = OpenProcess(PROCESS_ALL_ACCESS, true, entry.th32ProcessID)) {
                     EmptyWorkingSet(handle);
                     CloseHandle(handle);
