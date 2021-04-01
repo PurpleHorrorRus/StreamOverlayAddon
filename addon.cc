@@ -23,10 +23,11 @@ namespace OverlayAddon
     void InitWindow(const FunctionCallbackInfo<Value> &args) 
     {
         unsigned char* bufferData = (unsigned char*)node::Buffer::Data(args[0].As<Object>());
-        window = (HWND) *reinterpret_cast<unsigned long*>(bufferData);
+        window = static_cast<HWND>(*reinterpret_cast<void**>(bufferData));
 
         Isolate* isolate = args.GetIsolate();
         String::Utf8Value name(isolate, args[1]->ToString(isolate->GetCurrentContext()).ToLocalChecked());
+        windowName = new char[sizeof(((std::string)*name).c_str()) + 1];
         std::strcpy(windowName, ((std::string)*name).c_str());
     }
 
