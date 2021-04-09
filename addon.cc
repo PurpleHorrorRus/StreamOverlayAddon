@@ -2,6 +2,7 @@
 #include <tlhelp32.h>
 #include <thread>
 #include <psapi.h>
+#include <list>
 #pragma comment(lib, "psapi.lib")
 
 namespace OverlayAddon
@@ -25,8 +26,8 @@ namespace OverlayAddon
     {
         Isolate* isolate = args.GetIsolate();
         String::Utf8Value name(isolate, args[1]->ToString(isolate->GetCurrentContext()).ToLocalChecked());
-        windowName = new char[sizeof(((std::string)*name).c_str()) + 1];
-        std::strcpy(windowName, ((std::string)*name).c_str());
+        windowName = new char[sizeof(((std::string) *name).c_str()) + 1];
+        std::strcpy(windowName, ((std::string) *name).c_str());
     }
 
     void InitWindow(const FunctionCallbackInfo<Value> &args) 
@@ -36,38 +37,51 @@ namespace OverlayAddon
         InitWindowA(args);
     }
 
-    void GetPids(const FunctionCallbackInfo<Value> &args) {
-        Isolate* isolate = args.GetIsolate();
-        Local<Array> arr = Array::New(isolate);
+    std::list<int> GetPidsA(const char *szExeFile) {
+        std::list<int> result;
 
         const HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-
-        int i = 0;
         while (Process32Next(snap, &entry)) {
-            if (strcmp(entry.szExeFile, windowName) == 0) {
-                arr->Set(isolate->GetCurrentContext(), i, v8::Number::New(isolate, entry.th32ProcessID));
-                i++;
+            if (strcmp(entry.szExeFile, szExeFile) == 0) {
+                result.push_back(entry.th32ProcessID);
             }
         }
 
         CloseHandle(snap);
+        return result;
+    }
+    
+    bool FindFirst(const char* szExeFile) {
+        const HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+
+        while (Process32Next(snap, &entry)) {
+            if (strcmp(entry.szExeFile, szExeFile) == 0) {
+                CloseHandle(snap);
+                return true;
+            }
+        }
+
+        CloseHandle(snap);
+        return false;
+    }
+
+    void GetPids(const FunctionCallbackInfo<Value> &args) {
+        std::list<int> pids = GetPidsA(windowName);
+
+        Isolate *isolate = args.GetIsolate();
+        Local <Array> arr = Array::New(isolate);
+
+        for (int i = 0; i < pids.size(); i++) {
+            arr->Set(isolate->GetCurrentContext(), i, v8::Number::New(isolate, *std::next(pids.begin(), i)));
+        }
+
         return args.GetReturnValue().Set(arr);
     }
 
     void FindWindow(const FunctionCallbackInfo<Value>& args) {
         Isolate* isolate = args.GetIsolate();
         String::Utf8Value name(isolate, args[0]->ToString(isolate->GetCurrentContext()).ToLocalChecked());
-
-        const HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-        while (Process32Next(snap, &entry)) {
-            if (strcmp(entry.szExeFile, windowName) == 0) {
-                CloseHandle(snap);
-                return args.GetReturnValue().Set(true);
-            }
-        }
-
-        CloseHandle(snap);
-        return args.GetReturnValue().Set(false);
+        return args.GetReturnValue().Set(FindFirst(((std::string) *name).c_str()));
     }
 
     void SetLowPriority(const FunctionCallbackInfo<Value> &args)
@@ -90,18 +104,14 @@ namespace OverlayAddon
 
     void ReduceWorkingSet(const FunctionCallbackInfo<Value> &args)
     {
-        const HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+        std::list<int> pids = GetPidsA(windowName);
 
-        while (Process32Next(snap, &entry)) {
-            if (strcmp(entry.szExeFile, windowName) == 0) {
-                if (const HANDLE handle = OpenProcess(PROCESS_ALL_ACCESS, true, entry.th32ProcessID)) {
-                    EmptyWorkingSet(handle);
-                    CloseHandle(handle);
-                }
+        for (int i = 0; i < pids.size(); i++) {
+            if (const HANDLE handle = OpenProcess(PROCESS_ALL_ACCESS, true, *std::next(pids.begin(), i))) {
+                EmptyWorkingSet(handle);
+                CloseHandle(handle);
             }
         }
-
-        CloseHandle(snap);
     }
 
     void MoveTop(const FunctionCallbackInfo<Value> &args) 
