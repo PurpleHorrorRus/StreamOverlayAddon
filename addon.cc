@@ -10,6 +10,7 @@ namespace OverlayAddon
     using v8::Context;
     using v8::FunctionCallbackInfo;
     using v8::Local;
+    using v8::Array;
     using v8::Object;
     using v8::String;
     using v8::Value;
@@ -20,15 +21,37 @@ namespace OverlayAddon
     HWND window;
     PROCESSENTRY32 entry;
 
-    void InitWindow(const FunctionCallbackInfo<Value> &args) 
+    void InitWindowA(const FunctionCallbackInfo<Value> &args)
     {
-        unsigned char* bufferData = (unsigned char*)node::Buffer::Data(args[0].As<Object>());
-        window = (HWND) *reinterpret_cast<unsigned long*>(bufferData);
-
         Isolate* isolate = args.GetIsolate();
         String::Utf8Value name(isolate, args[1]->ToString(isolate->GetCurrentContext()).ToLocalChecked());
         windowName = new char[sizeof(((std::string)*name).c_str()) + 1];
         std::strcpy(windowName, ((std::string)*name).c_str());
+    }
+
+    void InitWindow(const FunctionCallbackInfo<Value> &args) 
+    {
+        unsigned char* bufferData = (unsigned char*)node::Buffer::Data(args[0].As<Object>());
+        window = (HWND) *reinterpret_cast<unsigned long*>(bufferData);
+        InitWindowA(args);
+    }
+
+    void GetPids(const FunctionCallbackInfo<Value> &args) {
+        Isolate* isolate = args.GetIsolate();
+        Local<Array> arr = Array::New(isolate);
+
+        const HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+
+        int i = 0;
+        while (Process32Next(snap, &entry)) {
+            if (strcmp(entry.szExeFile, windowName) == 0) {
+                arr->Set(isolate->GetCurrentContext(), i, v8::Number::New(isolate, entry.th32ProcessID));
+                i++;
+            }
+        }
+
+        CloseHandle(snap);
+        return args.GetReturnValue().Set(arr);
     }
 
     void FindWindow(const FunctionCallbackInfo<Value>& args) {
@@ -37,7 +60,7 @@ namespace OverlayAddon
 
         const HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
         while (Process32Next(snap, &entry)) {
-            if (strcmp(entry.szExeFile, ((std::string) *name).c_str()) == 0) {
+            if (strcmp(entry.szExeFile, windowName) == 0) {
                 CloseHandle(snap);
                 return args.GetReturnValue().Set(true);
             }
@@ -89,8 +112,10 @@ namespace OverlayAddon
     void Initialize(const Local<Object> exports)
     {
         entry.dwSize = sizeof(PROCESSENTRY32);
-
+           
+        NODE_SET_METHOD(exports, "InitWindowA", InitWindowA);
         NODE_SET_METHOD(exports, "InitWindow", InitWindow);
+        NODE_SET_METHOD(exports, "GetPids", GetPids);
         NODE_SET_METHOD(exports, "FindWindow", FindWindow);
         NODE_SET_METHOD(exports, "SetLowPriority", SetLowPriority);
         NODE_SET_METHOD(exports, "ReduceWorkingSet", ReduceWorkingSet);
