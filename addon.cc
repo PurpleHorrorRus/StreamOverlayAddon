@@ -26,7 +26,7 @@ namespace OverlayAddon
     {
         Isolate* isolate = args.GetIsolate();
         String::Utf8Value name(isolate, args[1]->ToString(isolate->GetCurrentContext()).ToLocalChecked());
-        windowName = new char[((std::string) *name).length()];
+        windowName = new char[((std::string) *name).length() + 1];
         std::strcpy(windowName, ((std::string) *name).c_str());
     }
 
