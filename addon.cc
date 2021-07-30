@@ -78,6 +78,22 @@ namespace OverlayAddon
         return args.GetReturnValue().Set(arr);
     }
 
+    void GetNames(const FunctionCallbackInfo<Value>& args) {
+        Isolate* isolate = args.GetIsolate();
+        Local <v8::Context> context = isolate->GetCurrentContext();
+        Local <Array> arr = Array::New(isolate);
+
+        int i = 0;
+        const HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+        while (Process32Next(snap, &entry)) {
+            arr->Set(context, i, String::NewFromUtf8(isolate, entry.szExeFile).ToLocalChecked());
+            i++;
+        }
+
+        CloseHandle(snap);
+        return args.GetReturnValue().Set(arr);
+    }
+
     void FindWindow(const FunctionCallbackInfo<Value>& args) {
         Isolate* isolate = args.GetIsolate();
         String::Utf8Value name(isolate, args[0]->ToString(isolate->GetCurrentContext()).ToLocalChecked());
@@ -127,6 +143,7 @@ namespace OverlayAddon
         NODE_SET_METHOD(exports, "InitWindow", InitWindow);
         NODE_SET_METHOD(exports, "GetPids", GetPids);
         NODE_SET_METHOD(exports, "FindWindow", FindWindow);
+        NODE_SET_METHOD(exports, "GetNames", GetNames);
         NODE_SET_METHOD(exports, "SetLowPriority", SetLowPriority);
         NODE_SET_METHOD(exports, "ReduceWorkingSet", ReduceWorkingSet);
         NODE_SET_METHOD(exports, "MoveTop", MoveTop);
