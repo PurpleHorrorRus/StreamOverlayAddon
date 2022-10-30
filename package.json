@@ -1,17 +1,17 @@
 {
-  "name": "overlayaddon",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "install": "node-gyp rebuild"
-  },
-  "author": "PurpleHorrorRus",
-  "license": "ISC",
-  "gypfile": true,
-  "dependencies": {
-    "bindings": "^1.5.0",
-    "nan": "^2.16.0",
-    "node-addon-api": "^5.0.0"
-  }
+    "name": "overlayaddon",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "install": "node-gyp rebuild"
+    },
+    "author": "PurpleHorrorRus",
+    "license": "ISC",
+    "gypfile": true,
+    "dependencies": {
+        "bindings": "^1.5.0",
+        "nan": "^2.17.0",
+        "node-addon-api": "^5.0.0"
+    }
 }
