@@ -37,12 +37,16 @@ namespace OverlayAddon
         InitWindowA(args);
     }
 
+    bool compareEntryName (const char *szExeFile) {
+        return strcmp((char*) entry.szExeFile, szExeFile) == 0;
+    }
+
     std::list<int> GetPidsA(const char *szExeFile) {
         std::list<int> result;
 
         const HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
         while (Process32Next(snap, &entry)) {
-            if (strcmp(entry.szExeFile, szExeFile) == 0) {
+            if (compareEntryName(szExeFile)) {
                 result.push_back(entry.th32ProcessID);
             }
         }
@@ -55,7 +59,7 @@ namespace OverlayAddon
         const HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 
         while (Process32Next(snap, &entry)) {
-            if (strcmp(entry.szExeFile, szExeFile) == 0) {
+            if (compareEntryName(szExeFile)) {
                 CloseHandle(snap);
                 return true;
             }
@@ -86,7 +90,7 @@ namespace OverlayAddon
         int i = 0;
         const HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
         while (Process32Next(snap, &entry)) {
-            arr->Set(context, i, String::NewFromUtf8(isolate, entry.szExeFile).ToLocalChecked());
+            arr->Set(context, i, String::NewFromUtf8(isolate, (char*) entry.szExeFile).ToLocalChecked());
             i++;
         }
 
@@ -105,7 +109,7 @@ namespace OverlayAddon
         const HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 
         while (Process32Next(snap, &entry)) {
-            if (strcmp(entry.szExeFile, windowName) == 0 && entry.pcPriClassBase != 4) {
+            if (compareEntryName(windowName) && entry.pcPriClassBase != 4) {
                 if (const HANDLE handle = OpenProcess(PROCESS_ALL_ACCESS, true, entry.th32ProcessID)) {
                     SetProcessAffinityMask(handle, mask);
                     SetPriorityClass(handle, IDLE_PRIORITY_CLASS);
