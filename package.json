@@ -4,7 +4,7 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-        "install": "node-gyp rebuild"
+        "build": "node-gyp rebuild"
     },
     "author": "PurpleHorrorRus",
     "license": "ISC",
